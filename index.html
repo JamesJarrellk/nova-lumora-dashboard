@@ -2,157 +2,235 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nova Lumora — Mission Control</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300;0,400;0,500;0,600;1,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#0F1720; --panel:#152030; --line:#233140;
-    --ink:#E8EDF2; --ink-2:#A9B6C4; --ink-3:#6F7F91;
-    --amber:#F2B441; --teal:#4FB3A5; --rose:#C96A6A; --slate:#5B6B7D;
-  }
+  :root{--bg0:#070a1a;--bg1:#12163a;--card:rgba(255,255,255,.035);--line:rgba(255,255,255,.14);--ink:#eef0ff;--ink2:#b9bfe0;--ink3:#7d84b0;--glow:#cfd6ff}
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
-  a{color:inherit}
-  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 64px}
-  header{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap}
-  header h1{font-size:15px;font-weight:600;letter-spacing:.02em;margin:0;color:var(--ink-2)}
-  header .sync{font-size:12px;color:var(--ink-3)}
-  header .sync.err{color:var(--rose)}
+  html,body{margin:0;background:linear-gradient(180deg,var(--bg0) 0%,#0c1030 45%,var(--bg1) 100%);color:var(--ink);font-family:"Jost",system-ui,sans-serif;min-height:100%}
+  body{position:relative;overflow-x:hidden}
+  #stars{position:fixed;inset:0;pointer-events:none;z-index:0}
+  #stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:.55;animation:tw 4s ease-in-out infinite}
+  @keyframes tw{50%{opacity:.15}}
+  @media (prefers-reduced-motion:reduce){#stars i{animation:none}}
+  .wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 28px 60px}
+  .mono{font-family:"JetBrains Mono",monospace;letter-spacing:.18em;text-transform:uppercase}
 
-  /* meter — the one bold element */
-  .meter{margin:36px 0 12px}
-  .meter .big{font-size:clamp(34px,6vw,56px);font-weight:700;line-height:1;letter-spacing:-.02em;margin:0}
-  .meter .big span{color:var(--amber)}
-  .meter .sub{color:var(--ink-2);font-size:15px;margin:10px 0 18px}
-  .segs{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
-  .segs i{display:block;height:14px;border-radius:2px;background:var(--line)}
-  .segs i.on{background:var(--amber)}
-  .segs i.trial{background:linear-gradient(90deg,var(--amber) 50%,var(--line) 50%)}
-  .legend{display:flex;gap:18px;font-size:12px;color:var(--ink-3);margin-top:10px;flex-wrap:wrap}
-  .legend b{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+  .hero{position:relative;text-align:center;padding:64px 0 24px}
+  .hero .arc{position:absolute;left:50%;top:70px;transform:translateX(-50%);width:min(860px,96vw);height:auto;opacity:.8}
+  .hero .nl{font-family:"Jost";font-weight:300;font-size:30px;letter-spacing:.06em;color:var(--glow);position:relative;top:-6px}
+  .hero h1{font-weight:300;font-size:clamp(38px,7vw,74px);letter-spacing:.28em;margin:8px 0 0;padding-left:.28em;color:#fff;text-shadow:0 0 18px rgba(207,214,255,.35)}
+  .hero .space{height:clamp(140px,26vw,300px)}
+  .hero .line{font-size:13px;color:var(--ink);margin:0 0 14px}
+  .hero .quote{font-style:italic;font-weight:300;color:var(--ink2);max-width:820px;margin:0 auto;font-size:17px;line-height:1.5}
+  .next{margin:40px auto 0;max-width:1040px;border:1px solid rgba(207,214,255,.75);padding:20px 40px;text-align:left;box-shadow:0 0 22px rgba(120,140,255,.12)}
+  .next .lab{font-size:11px;color:var(--ink2);margin-bottom:8px}
+  .next .txt{font-size:19px;font-weight:600}
+  hr.sep{border:0;border-top:1px solid var(--line);margin:44px 0}
+  .mandela{text-align:center}
+  .mandela .q{font-size:24px;font-weight:600;font-style:italic;margin:0 0 10px}
+  .mandela .a{font-size:11px;color:var(--ink2)}
+  .count{display:flex;justify-content:center;gap:clamp(40px,8vw,110px);margin:36px 0 48px;flex-wrap:wrap}
+  .count .n{font-family:"JetBrains Mono";font-size:36px;font-weight:500;text-align:center}
+  .count .l{font-size:10px;color:var(--ink2);text-align:center;margin-top:4px}
 
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:34px 0}
-  .stats div{background:var(--bg);padding:16px 16px 14px}
-  .stats .n{font-size:26px;font-weight:600;line-height:1}
-  .stats .l{font-size:13px;color:var(--ink-2);margin-top:6px}
+  .sec{margin-top:52px}
+  .sec .h{display:flex;align-items:center;gap:14px;font-size:14px;color:var(--ink);margin-bottom:22px}
+  .sec .h .num{color:var(--ink2)}
+  .sec .h:after{content:"";flex:1;height:1px;background:var(--line)}
+  .card{background:var(--card);border:1px solid rgba(255,255,255,.08);padding:26px 28px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  @media (max-width:820px){.grid2{grid-template-columns:1fr}}
+  .prog .t{font-weight:600;font-size:17px;margin-bottom:16px}
+  .prog .bar{height:2px;background:rgba(255,255,255,.12);position:relative}
+  .prog .bar i{position:absolute;left:0;top:0;height:100%;background:var(--glow);box-shadow:0 0 8px rgba(207,214,255,.6)}
+  .prog .cap{display:flex;justify-content:space-between;margin-top:12px;font-family:"JetBrains Mono";font-size:12px;color:var(--ink2)}
+  .prog .cap b{color:var(--ink);font-weight:500}
+  .path{margin-top:26px}
+  .path .top{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px}
+  .path .top .t{font-weight:600;font-size:17px}
+  .path .top .day{font-family:"JetBrains Mono";font-size:14px;color:var(--ink2)}
+  .path .top .day b{font-size:24px;color:var(--ink);font-weight:500}
+  .path .rail{position:relative;height:2px;background:rgba(255,255,255,.14);margin:26px 0 18px}
+  .path .rail i{position:absolute;top:-4px;width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 10px #fff;margin-left:-5px}
+  .path .marks{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;font-family:"JetBrains Mono";font-size:11px;color:var(--ink2)}
+  .path .marks div b{display:block;color:var(--ink);font-weight:500;margin-bottom:4px}
+  .path .marks div:nth-child(n+2){text-align:center}.path .marks div:last-child{text-align:right}
+  @media (max-width:640px){.path .marks{font-size:9px}}
 
-  h2{font-size:13px;font-weight:600;color:var(--ink-2);margin:36px 0 12px;letter-spacing:.01em}
-  .cols{display:grid;grid-template-columns:1fr 1fr;gap:28px}
-  @media (max-width:760px){.cols{grid-template-columns:1fr}}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid rgba(255,255,255,.08);background:var(--card)}
+  .stats div{padding:34px 10px;text-align:center;border-right:1px solid rgba(255,255,255,.08)}
+  .stats div:last-child{border-right:0}
+  .stats .n{font-family:"JetBrains Mono";font-size:34px;font-weight:500}
+  .stats .l{font-size:14px;color:var(--ink2);margin-top:8px}
+  .stats.one{grid-template-columns:1fr;border-top:0}
+  @media (max-width:820px){.stats{grid-template-columns:1fr 1fr}.stats div:nth-child(2n){border-right:0}.stats div{border-bottom:1px solid rgba(255,255,255,.08)}}
 
-  .list{border-top:1px solid var(--line)}
-  .row{padding:14px 0;border-bottom:1px solid var(--line)}
-  .row .t{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-  .row .name{font-weight:600;font-size:15px}
-  .row .meta{color:var(--ink-2);font-size:13px;margin-top:4px;line-height:1.45}
-  .row .note{color:var(--ink-3);font-size:13px;margin-top:6px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-  .row.open .note{display:block}
-  .row .more{background:none;border:0;color:var(--ink-3);font:inherit;font-size:12px;padding:0;margin-top:6px;cursor:pointer;text-decoration:underline}
-  .pill{font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--ink-2);white-space:nowrap;flex:none}
-  .pill.live{border-color:var(--teal);color:var(--teal)}
-  .pill.trial{border-color:var(--amber);color:var(--amber)}
-  .pill.dead{border-color:var(--rose);color:var(--rose)}
+  .wins .row{display:grid;grid-template-columns:120px 1fr;gap:16px;padding:20px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+  .wins .row:last-child{border-bottom:0}
+  .wins .d{font-family:"JetBrains Mono";font-size:12px;color:var(--ink2);padding-top:4px}
+  .wins .t{font-weight:600;font-size:17px;margin-bottom:6px}
+  .wins .b{color:var(--ink2);font-size:15px;line-height:1.5}
+  @media (max-width:640px){.wins .row{grid-template-columns:1fr}}
 
-  .timeline .row{display:grid;grid-template-columns:86px 1fr;gap:14px}
-  .timeline .d{color:var(--ink-3);font-size:13px;padding-top:2px}
-  .timeline .who{color:var(--ink-3);font-size:12px;margin-top:6px}
+  .sys{display:grid;gap:18px}
+  .sys .card{position:relative;padding-right:150px}
+  .sys .t{font-weight:600;font-size:19px;margin-bottom:8px}
+  .sys .b{color:var(--ink2);font-size:15px;line-height:1.5}
+  .sys .kv{margin-top:14px;font-family:"JetBrains Mono";font-size:12px;color:var(--ink2);line-height:1.9}
+  .sys .kv b{color:var(--ink);font-weight:500}
+  .pill{position:absolute;right:24px;top:24px;font-family:"JetBrains Mono";font-size:11px;letter-spacing:.12em;border:1px solid var(--ink2);padding:5px 12px;color:var(--ink)}
+  @media (max-width:640px){.sys .card{padding-right:28px}.pill{position:static;display:inline-block;margin-bottom:10px}}
 
-  .bars .b{display:grid;grid-template-columns:160px 1fr 40px;gap:12px;align-items:center;padding:8px 0;font-size:14px}
-  .bars .bar{height:10px;background:var(--line);border-radius:2px;overflow:hidden}
-  .bars .bar i{display:block;height:100%;background:var(--slate)}
-  .bars .c{text-align:right;color:var(--ink-2)}
+  .pipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+  .pipe .card{text-align:center;padding:38px 16px}
+  .pipe .n{font-family:"JetBrains Mono";font-size:32px;font-weight:500}
+  .pipe .l{font-size:15px;color:var(--ink2);margin-top:8px}
 
-  .tasks{display:grid;grid-template-columns:1fr 1fr;gap:28px}
-  @media (max-width:760px){.tasks{grid-template-columns:1fr}}
-  .tasks h3{font-size:14px;font-weight:600;margin:0 0 10px;display:flex;justify-content:space-between}
-  .tasks h3 span{color:var(--ink-3);font-weight:400}
-  .task{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
-  .task input{margin-top:3px;accent-color:var(--teal)}
-  .task.done label{color:var(--ink-3);text-decoration:line-through}
-  .add{display:flex;gap:8px;margin-top:10px}
-  .add input{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--ink);font:inherit;font-size:14px;padding:9px 10px;border-radius:4px}
-  .add button{background:var(--ink);color:var(--bg);border:0;font:inherit;font-weight:600;font-size:14px;padding:9px 14px;border-radius:4px;cursor:pointer}
-  .add button:disabled{opacity:.5;cursor:default}
-  .empty{color:var(--ink-3);font-size:14px;padding:12px 0}
-  footer{margin-top:48px;color:var(--ink-3);font-size:12px;line-height:1.6;border-top:1px solid var(--line);padding-top:16px}
-  :focus-visible{outline:2px solid var(--amber);outline-offset:2px}
-  @media (prefers-reduced-motion:no-preference){.segs i{transition:background .25s}}
+  .week{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  @media (max-width:820px){.week{grid-template-columns:1fr}}
+  .week .card{padding:28px 30px}
+  .week .hd{display:flex;justify-content:space-between;font-family:"JetBrains Mono";font-size:12px;letter-spacing:.18em;margin-bottom:22px}
+  .task{display:flex;gap:16px;align-items:flex-start;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:16px;line-height:1.5}
+  .task input{margin-top:6px;width:16px;height:16px;accent-color:#cfd6ff;flex:none}
+  .task.done label{color:var(--ink3);text-decoration:line-through}
+  .add{display:flex;gap:16px;margin-top:22px;align-items:center}
+  .add input{flex:1;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--ink);font:inherit;font-size:15px;padding:8px 0;outline:none}
+  .add input:focus{border-bottom-color:var(--glow)}
+  .add button{background:transparent;border:1px solid var(--line);color:var(--ink);font:inherit;font-size:14px;padding:8px 22px;cursor:pointer}
+  .add button:hover{border-color:var(--glow)}
+  .empty{color:var(--ink3);font-size:15px;padding:8px 0}
+
+  footer{margin-top:64px;text-align:center;font-family:"JetBrains Mono";font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);line-height:2.4}
+  footer .err{color:#e08a8a}
 </style>
 </head>
 <body>
+<div id="stars"></div>
 <div class="wrap">
-  <header>
-    <h1>Nova Lumora — Mission Control</h1>
-    <div class="sync" id="sync">Loading from the brain…</div>
-  </header>
 
-  <section class="meter" aria-labelledby="meterTitle">
-    <p class="big" id="meterTitle"><span id="payingN">–</span> of 10 paying clients</p>
-    <p class="sub" id="meterSub">Live count from the Clients table. Trial accounts show as half-filled.</p>
-    <div class="segs" id="segs" role="img" aria-label="Progress toward 10 paying clients"></div>
-    <div class="legend">
-      <span><b style="background:var(--amber)"></b>Paying</span>
-      <span><b style="background:linear-gradient(90deg,var(--amber) 50%,var(--line) 50%)"></b>Trial / converting</span>
-      <span><b style="background:var(--line)"></b>Open</span>
+  <section class="hero">
+    <svg class="arc" viewBox="0 0 860 420" fill="none" aria-hidden="true">
+      <path d="M40 400 A 400 400 0 0 1 820 400" stroke="rgba(207,214,255,.55)" stroke-width="1.2"/>
+    </svg>
+    <div class="nl">NL</div>
+    <h1>NOVA LUMORA</h1>
+    <div class="space"></div>
+    <p class="line mono" id="heroLine">– OF 10 PAYING CLIENTS — THE PATH TO FULL INDEPENDENCE</p>
+    <p class="quote">"Two founders who refused to spend their lives working for someone else — building toward retiring both sets of parents, and proving it could be done with no backing but the work itself."</p>
+    <div class="next">
+      <div class="lab mono">Next Action</div>
+      <div class="txt" id="nextAction">Loading from the brain…</div>
     </div>
   </section>
 
-  <section class="stats" aria-label="Company overview">
-    <div><div class="n" id="sActive">–</div><div class="l">Active clients</div></div>
-    <div><div class="n" id="sSystems">–</div><div class="l">Systems live</div></div>
-    <div><div class="n" id="sProspects">–</div><div class="l">Prospects tracked</div></div>
-    <div><div class="n" id="sOverhead">–</div><div class="l">Monthly overhead</div></div>
-    <div><div class="n" id="sRevenue">–</div><div class="l">Collected, last 30 days</div></div>
-  </section>
-
-  <div class="cols">
-    <section>
-      <h2>Systems in operation</h2>
-      <div class="list" id="systems"></div>
-    </section>
-    <section>
-      <h2>Clients</h2>
-      <div class="list" id="clients"></div>
-    </section>
+  <hr class="sep">
+  <div class="mandela">
+    <p class="q">"It always seems impossible until it's done."</p>
+    <div class="a mono">Nelson Mandela</div>
   </div>
+  <div class="count">
+    <div><div class="n" id="cDays">–</div><div class="l mono">Days to EOY</div></div>
+    <div><div class="n" id="cWeeks">–</div><div class="l mono">Weeks left</div></div>
+    <div><div class="n" id="cNeed">–</div><div class="l mono">Clients still needed</div></div>
+  </div>
+  <hr class="sep">
 
-  <section>
-    <h2>Recent decisions</h2>
-    <div class="list timeline" id="decisions"></div>
-  </section>
-
-  <section>
-    <h2>Prospect pipeline</h2>
-    <div class="bars" id="pipeline"></div>
-  </section>
-
-  <section>
-    <h2>This week</h2>
-    <div class="tasks">
-      <div>
-        <h3>James <span id="jCount"></span></h3>
-        <div id="jTasks"></div>
-        <form class="add" data-who="James"><input placeholder="Add a task for James" aria-label="Add a task for James"><button type="submit">Add</button></form>
+  <section class="sec">
+    <div class="h mono"><span class="num">01</span>Mission Status</div>
+    <div class="grid2">
+      <div class="card prog">
+        <div class="t">10 paying clients by end of 2026</div>
+        <div class="bar"><i id="pClients"></i></div>
+        <div class="cap"><span>Started Jan 2026</span><b id="pClientsPct">–</b></div>
       </div>
-      <div>
-        <h3>Conor <span id="cCount"></span></h3>
+      <div class="card prog">
+        <div class="t">Verticals validated for expansion</div>
+        <div class="bar"><i id="pVert"></i></div>
+        <div class="cap"><span id="pVertCap">–</span><b id="pVertPct">–</b></div>
+      </div>
+    </div>
+    <div class="card prog" style="margin-top:26px">
+      <div class="t">Systems running without founders present</div>
+      <div class="bar"><i id="pSys"></i></div>
+      <div class="cap"><span id="pSysCap">–</span><b id="pSysPct">–</b></div>
+    </div>
+    <div class="card path">
+      <div class="top"><div class="t">Path to $13M — retiring both families</div><div class="day">Day <b id="dayN">–</b> of the build</div></div>
+      <div class="rail"><i id="railDot" style="left:0"></i></div>
+      <div class="marks">
+        <div><b>$0</b>Founded, Jan 2026</div>
+        <div><b>$100K</b>Real traction</div>
+        <div><b>$1M</b>Both full-time, no jobs</div>
+        <div><b>$13M</b>Both families retired</div>
+        <div><b>$1B</b>The real someday</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="h mono"><span class="num">02</span>Company Overview</div>
+    <div class="stats">
+      <div><div class="n" id="sActive">–</div><div class="l">Active Clients</div></div>
+      <div><div class="n" id="sSystems">–</div><div class="l">Systems Live</div></div>
+      <div><div class="n" id="sProspects">–</div><div class="l">Prospects Tracked</div></div>
+      <div><div class="n" id="sVerticals">–</div><div class="l">Verticals Validated</div></div>
+    </div>
+    <div class="stats one"><div><div class="n" id="sOverhead">–</div><div class="l">Monthly Overhead</div></div></div>
+  </section>
+
+  <section class="sec">
+    <div class="h mono"><span class="num">03</span>Recent Wins</div>
+    <div class="card wins" id="wins"></div>
+  </section>
+
+  <section class="sec">
+    <div class="h mono"><span class="num">04</span>Systems in Operation</div>
+    <div class="sys" id="systems"></div>
+  </section>
+
+  <section class="sec">
+    <div class="h mono"><span class="num">05</span>Prospect Pipeline</div>
+    <div class="pipe" id="pipeline"></div>
+  </section>
+
+  <section class="sec">
+    <div class="h mono"><span class="num">06</span>This Week</div>
+    <div class="week">
+      <div class="card">
+        <div class="hd"><span>James</span><span id="jCount">0/0</span></div>
+        <div id="jTasks"></div>
+        <form class="add" data-who="James"><input placeholder="Add a task..." aria-label="Add a task for James"><button type="submit">Add</button></form>
+      </div>
+      <div class="card">
+        <div class="hd"><span>Conor</span><span id="cCount">0/0</span></div>
         <div id="cTasks"></div>
-        <form class="add" data-who="Conor"><input placeholder="Add a task for Conor" aria-label="Add a task for Conor"><button type="submit">Add</button></form>
+        <form class="add" data-who="Conor"><input placeholder="Add a task..." aria-label="Add a task for Conor"><button type="submit">Add</button></form>
       </div>
     </div>
   </section>
 
   <footer>
-    Every number on this page is read from the Business Brain when the page loads. To change what it says, change the brain.
-    Tasks sync between James and Conor; credentials stay server-side.
-    <div id="stamp"></div>
+    <div>Synced between you and Conor in real time — credentials stay server-side, never exposed in this page.</div>
+    <div id="stamp">Nova Lumora Inc · Founded MMXXVI · Live — reading the brain…</div>
   </footer>
 </div>
 
 <script>
 (function(){
+  const S = document.getElementById('stars');
+  for (let i = 0; i < 140; i++) {
+    const s = document.createElement('i');
+    s.style.left = Math.random()*100 + 'vw';
+    s.style.top = Math.random()*100 + 'vh';
+    s.style.animationDelay = (Math.random()*4) + 's';
+    s.style.opacity = (0.25 + Math.random()*0.5).toFixed(2);
+    if (Math.random() < .12) { s.style.width = s.style.height = '3px'; }
+    S.appendChild(s);
+  }
+
   const PULSE = 'https://hook.us2.make.com/ciyem3vnpco5aclk4av65k04nzvus11l';
   const SCAN  = 'https://hook.us2.make.com/tl409893f172mzoaiprhcui6kzxbtded';
   const FORGE = 'https://hook.us2.make.com/v7shx2hwl3t4cx8e4cte66f8zuiizbls';
@@ -160,181 +238,127 @@
 
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const money = n => '$' + Math.round(n).toLocaleString('en-US');
   const num = v => { const m = String(v ?? '').replace(/,/g,'').match(/-?\d+(\.\d+)?/); return m ? parseFloat(m[0]) : 0; };
+  const money = n => '$' + Math.round(n).toLocaleString('en-US');
+  const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const fmtD = s => { const t = Date.parse(s); if (isNaN(t)) return esc(s||''); const d = new Date(t); return MON[d.getUTCMonth()] + ' ' + d.getUTCDate(); };
 
   const DEAD = /dead|resign|closed|not converting|former|lost|inactive/i;
-  const TRIAL = /trial|testing|converting|pending|scoping|building/i;
-  const LIVE = /live|active|paying/i;
+  const TRIALS = /trial|testing|converting|pending|scoping|building|untested/i;
+  function clientState(c){ const s = String(c.Status||''); if (DEAD.test(s)) return 'dead'; if (/live - active|paying/i.test(s)) return 'live'; if (TRIALS.test(s)) return 'trial'; if (/live|active/i.test(s)) return 'live'; return 'trial'; }
+  function systemState(s){ const t = String(s.Status||''); if (DEAD.test(t)) return 'dead'; if (/live/i.test(t) && !TRIALS.test(t)) return 'live'; return 'building'; }
+  const firstSentence = s => { s = String(s||'').replace(/\s+/g,' ').trim(); const m = s.match(/^(.{20,110}?[.!?:])(\s|$)/); return m ? m[1] : (s.length > 110 ? s.slice(0,107) + '…' : s); };
 
-  function clientState(c){
-    const s = String(c.Status || '');
-    if (DEAD.test(s)) return 'dead';
-    if (TRIAL.test(s) && !/live - active/i.test(s)) return 'trial';
-    if (LIVE.test(s)) return 'live';
-    return 'trial';
-  }
-  function systemState(s){
-    const t = String(s.Status || '');
-    if (DEAD.test(t)) return 'dead';
-    if (/live/i.test(t) && !/testing|untested/i.test(t)) return 'live';
-    return 'trial';
-  }
-  const pillLabel = { live:'Live', trial:'In progress', dead:'Closed' };
+  (function(){
+    const now = new Date();
+    const eoy = new Date(now.getFullYear(), 11, 31);
+    const days = Math.max(0, Math.ceil((eoy - now)/864e5));
+    $('cDays').textContent = days;
+    $('cWeeks').textContent = Math.floor(days/7);
+    const start = new Date(now.getFullYear(), 0, 1);
+    $('dayN').textContent = Math.floor((now - start)/864e5) + 1;
+  })();
 
   function render(d){
-    const clients = (d.clients||[]).map(c => ({...c, _s: clientState(c)}));
-    const paying = clients.filter(c => c._s === 'live').length;
-    const trial  = clients.filter(c => c._s === 'trial').length;
-    const active = paying + trial;
+    const clients = (d.clients||[]).map(c => ({...c,_s:clientState(c)}));
+    const paying = clients.filter(c => c._s==='live').length;
+    const trial = clients.filter(c => c._s==='trial').length;
+    const systems = (d.systems||[]).map(s => ({...s,_s:systemState(s)}));
+    const liveSys = systems.filter(s => s._s==='live');
+    const activeSys = systems.filter(s => s._s!=='dead');
+    const prospects = d.prospects||[];
+    const verticals = [...new Set(prospects.map(p => (p.Industry||'').trim()).filter(Boolean))];
 
-    // meter
-    $('payingN').textContent = paying;
-    const segs = $('segs'); segs.innerHTML = '';
-    for (let i = 0; i < 10; i++) {
-      const el = document.createElement('i');
-      if (i < paying) el.className = 'on';
-      else if (i < paying + trial) el.className = 'trial';
-      segs.appendChild(el);
-    }
-    $('meterSub').textContent = trial
-      ? `${paying} paying, ${trial} in trial or converting. ${10 - paying} to go.`
-      : `${10 - paying} to go.`;
+    $('heroLine').textContent = `${paying} OF 10 PAYING CLIENTS — THE PATH TO FULL INDEPENDENCE`;
+    $('cNeed').textContent = Math.max(0, 10 - paying);
 
-    // stats
-    const systemsLive = (d.systems||[]).filter(s => systemState(s) === 'live').length;
-    const overhead = (d.overhead||[]).reduce((a,o) => a + num(o.Cost), 0);
-    const cutoff = Date.now() - 30*864e5;
-    const rev30 = (d.revenue||[]).filter(r => { const t = Date.parse(r.Date); return !isNaN(t) && t >= cutoff; })
-                                 .reduce((a,r) => a + num(r.Amount), 0);
-    $('sActive').textContent = active;
-    $('sSystems').textContent = systemsLive;
-    $('sProspects').textContent = (d.prospects||[]).length;
-    $('sOverhead').textContent = money(overhead);
-    $('sRevenue').textContent = money(rev30);
+    const pend = (d.decisions||[]).filter(x => /pending/i.test(x.Outcome||'')).map(x => ({...x,_t:Date.parse(x.Date)||0})).sort((a,b)=>b._t-a._t)[0];
+    if (pend) $('nextAction').textContent = firstSentence(pend.Decision);
 
-    // systems (live first, dead last)
-    const order = { live:0, trial:1, dead:2 };
-    const sysEl = $('systems'); sysEl.innerHTML = '';
-    (d.systems||[]).map(s => ({...s, _s: systemState(s)}))
-      .sort((a,b) => order[a._s]-order[b._s])
-      .forEach(s => {
-        sysEl.insertAdjacentHTML('beforeend', `
-          <div class="row">
-            <div class="t"><div class="name">${esc(s.Name)}</div><span class="pill ${s._s}">${pillLabel[s._s]}</span></div>
-            <div class="meta">${esc(s.Client || '')}${s.Pricing ? ' — ' + esc(s.Pricing) : ''}</div>
-            ${s.ProvenROI ? `<div class="note">${esc(s.ProvenROI)}</div><button class="more" type="button">Show more</button>` : ''}
-          </div>`);
-      });
-    if (!sysEl.children.length) sysEl.innerHTML = '<div class="empty">No systems recorded yet.</div>';
+    const pc = Math.round(paying/10*100); $('pClients').style.width = pc+'%'; $('pClientsPct').textContent = pc+'%';
+    const vTarget = 7, vc = Math.min(100, Math.round(verticals.length/vTarget*100));
+    $('pVert').style.width = vc+'%'; $('pVertPct').textContent = vc+'%'; $('pVertCap').textContent = `${verticals.length} of ${vTarget} tested`;
+    const sc = activeSys.length ? Math.round(liveSys.length/activeSys.length*100) : 0;
+    $('pSys').style.width = sc+'%'; $('pSysPct').textContent = sc+'%';
+    $('pSysCap').textContent = liveSys.length ? liveSys.map(s => String(s.Name).split(' - ')[0].split(' (')[0]).join(', ') + ' live' : 'Nothing live yet';
+    const totalRev = (d.revenue||[]).reduce((a,r) => a + num(r.Amount), 0);
+    const pos = totalRev > 0 ? Math.min(100, Math.log10(totalRev)/9*100) : 0;
+    $('railDot').style.left = pos + '%';
 
-    // clients
-    const cEl = $('clients'); cEl.innerHTML = '';
-    clients.sort((a,b) => order[a._s]-order[b._s]).forEach(c => {
-      cEl.insertAdjacentHTML('beforeend', `
-        <div class="row">
-          <div class="t"><div class="name">${esc(c.Name)}</div><span class="pill ${c._s}">${pillLabel[c._s]}</span></div>
-          <div class="meta">${esc(c.Industry || '')}${c.MonthlyValue ? ' — ' + esc(c.MonthlyValue) : ''}</div>
-          ${c.Notes ? `<div class="note">${esc(c.Notes)}</div><button class="more" type="button">Show more</button>` : ''}
-        </div>`);
+    $('sActive').textContent = paying + trial;
+    $('sSystems').textContent = liveSys.length;
+    $('sProspects').textContent = prospects.length;
+    $('sVerticals').textContent = verticals.length;
+    $('sOverhead').textContent = money((d.overhead||[]).reduce((a,o) => a + num(o.Cost), 0));
+
+    const W = $('wins'); W.innerHTML = '';
+    (d.decisions||[]).filter(x => /adopted|won/i.test(x.Outcome||''))
+      .map(x => ({...x,_t:Date.parse(x.Date)||0})).sort((a,b)=>b._t-a._t).slice(0,5)
+      .forEach(x => W.insertAdjacentHTML('beforeend',
+        `<div class="row"><div class="d">${fmtD(x.Date)}</div><div><div class="t">${esc(firstSentence(x.Decision))}</div><div class="b">${esc(firstSentence(x.Reasoning||''))}</div></div></div>`));
+    if (!W.children.length) W.innerHTML = '<div class="empty">No wins logged yet.</div>';
+
+    const order = {live:0, building:1};
+    const SY = $('systems'); SY.innerHTML = '';
+    activeSys.sort((a,b)=>order[a._s]-order[b._s]).forEach(s => {
+      const kv = [];
+      if (s.Client) kv.push(`<b>CLIENT</b> — ${esc(s.Client)}`);
+      if (s.Pricing) kv.push(`<b>PRICING</b> — ${esc(firstSentence(s.Pricing))}`);
+      SY.insertAdjacentHTML('beforeend',
+        `<div class="card"><span class="pill">${s._s==='live'?'LIVE':'BUILDING'}</span><div class="t">${esc(s.Name)}</div><div class="b">${esc(firstSentence(s.ProvenROI||''))}</div>${kv.length?`<div class="kv">${kv.join('<br>')}</div>`:''}</div>`);
     });
-    if (!cEl.children.length) cEl.innerHTML = '<div class="empty">No clients recorded yet.</div>';
+    if (!SY.children.length) SY.innerHTML = '<div class="empty">No systems recorded yet.</div>';
 
-    // decisions — newest first, last 8
-    const dEl = $('decisions'); dEl.innerHTML = '';
-    (d.decisions||[]).map(x => ({...x, _t: Date.parse(x.Date) || 0}))
-      .sort((a,b) => b._t - a._t).slice(0, 8)
-      .forEach(x => {
-        dEl.insertAdjacentHTML('beforeend', `
-          <div class="row">
-            <div class="d">${esc(x.Date || '')}</div>
-            <div>
-              <div class="note">${esc(x.Decision)}</div><button class="more" type="button">Show more</button>
-              <div class="who">${esc(x.Who || '')}${x.Outcome ? ' — ' + esc(x.Outcome) : ''}</div>
-            </div>
-          </div>`);
-      });
-    if (!dEl.children.length) dEl.innerHTML = '<div class="empty">No decisions logged yet.</div>';
-
-    // pipeline by industry
-    const byInd = {};
-    (d.prospects||[]).forEach(p => { const k = (p.Industry || 'Uncategorized').trim(); byInd[k] = (byInd[k]||0) + 1; });
-    const rows = Object.entries(byInd).sort((a,b) => b[1]-a[1]);
-    const max = rows.length ? rows[0][1] : 1;
-    const pEl = $('pipeline'); pEl.innerHTML = '';
-    rows.forEach(([k,v]) => pEl.insertAdjacentHTML('beforeend',
-      `<div class="b"><div>${esc(k)}</div><div class="bar"><i style="width:${Math.round(v/max*100)}%"></i></div><div class="c">${v}</div></div>`));
-    if (!rows.length) pEl.innerHTML = '<div class="empty">No prospects tracked yet.</div>';
-
-    // expand/collapse notes
-    document.querySelectorAll('.more').forEach(b => b.addEventListener('click', () => {
-      const row = b.closest('.row'); row.classList.toggle('open');
-      b.textContent = row.classList.contains('open') ? 'Show less' : 'Show more';
-    }));
+    const byInd = {}; prospects.forEach(p => { const k=(p.Industry||'Uncategorized').trim(); byInd[k]=(byInd[k]||0)+1; });
+    const P = $('pipeline'); P.innerHTML = '';
+    Object.entries(byInd).sort((a,b)=>b[1]-a[1]).forEach(([k,v]) => P.insertAdjacentHTML('beforeend', `<div class="card"><div class="n">${v}</div><div class="l">${esc(k)}</div></div>`));
+    if (!P.children.length) P.innerHTML = '<div class="empty">No prospects tracked yet.</div>';
 
     const t = d.lastUpdated ? new Date(d.lastUpdated) : new Date();
-    $('sync').textContent = 'Synced ' + t.toLocaleString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
-    $('stamp').textContent = 'Nova Lumora Inc · founded 2026';
+    $('stamp').textContent = 'Nova Lumora Inc · Founded MMXXVI · Live — synced ' + t.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
   }
 
   async function loadData(){
-    try {
-      const r = await fetch(PULSE + '?t=' + Date.now(), {cache:'no-store'});
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      render(await r.json());
-    } catch (e) {
-      const s = $('sync'); s.className = 'sync err';
-      s.textContent = 'Couldn’t reach the brain. Refresh to try again.';
-    }
+    try { const r = await fetch(PULSE + '?t=' + Date.now(), {cache:'no-store'}); if (!r.ok) throw 0; render(await r.json()); }
+    catch(e){ $('stamp').innerHTML = '<span class="err">Couldn’t reach the brain — refresh to try again.</span>'; $('nextAction').textContent = '—'; }
   }
 
-  // ---- tasks ----
   async function loadTasks(){
-    try {
-      const r = await fetch(SCAN + '?t=' + Date.now(), {cache:'no-store'});
-      const list = await r.json();
-      renderTasks(Array.isArray(list) ? list : []);
-    } catch (e) {
-      $('jTasks').innerHTML = $('cTasks').innerHTML = '<div class="empty">Tasks unavailable right now.</div>';
-    }
+    try { const r = await fetch(SCAN + '?t=' + Date.now(), {cache:'no-store'}); const l = await r.json(); renderTasks(Array.isArray(l)?l:[]); }
+    catch(e){ $('jTasks').innerHTML = $('cTasks').innerHTML = '<div class="empty">Tasks unavailable right now.</div>'; }
   }
   function renderTasks(list){
-    const groups = { James: [], Conor: [] };
-    list.forEach(t => { const w = /conor/i.test(t.Who) ? 'Conor' : 'James'; groups[w].push(t); });
-    [['James','jTasks','jCount'],['Conor','cTasks','cCount']].forEach(([who, id, cid]) => {
-      const el = $(id); el.innerHTML = '';
-      const arr = groups[who];
-      const done = arr.filter(t => t.Done === true || t.Done === 'true').length;
-      $(cid).textContent = arr.length ? `${done}/${arr.length}` : '';
-      if (!arr.length) { el.innerHTML = '<div class="empty">Nothing queued.</div>'; return; }
+    const g = {James:[],Conor:[]};
+    list.forEach(t => g[/conor/i.test(t.Who)?'Conor':'James'].push(t));
+    [['James','jTasks','jCount'],['Conor','cTasks','cCount']].forEach(([who,id,cid]) => {
+      const el = $(id); el.innerHTML=''; const arr = g[who];
+      const done = arr.filter(t => t.Done===true||t.Done==='true').length;
+      $(cid).textContent = `${done}/${arr.length}`;
+      if (!arr.length){ el.innerHTML = '<div class="empty">Nothing queued.</div>'; return; }
       arr.forEach(t => {
-        const isDone = t.Done === true || t.Done === 'true';
-        const row = document.createElement('div');
-        row.className = 'task' + (isDone ? ' done' : '');
-        row.innerHTML = `<input type="checkbox" id="t_${esc(t.Id)}" ${isDone ? 'checked' : ''}><label for="t_${esc(t.Id)}">${esc(t.Task)}</label>`;
+        const isDone = t.Done===true||t.Done==='true';
+        const row = document.createElement('div'); row.className = 'task'+(isDone?' done':'');
+        row.innerHTML = `<input type="checkbox" id="t_${esc(t.Id)}" ${isDone?'checked':''}><label for="t_${esc(t.Id)}">${esc(t.Task)}</label>`;
         row.querySelector('input').addEventListener('change', async ev => {
           row.classList.toggle('done', ev.target.checked);
-          await fetch(MARK, {method:'POST', body: new URLSearchParams({id: t.Id, done: ev.target.checked ? 'true' : 'false'})});
+          await fetch(MARK,{method:'POST',body:new URLSearchParams({id:t.Id,done:ev.target.checked?'true':'false'})});
           loadTasks();
         });
         el.appendChild(row);
       });
     });
+    const open = g.James.find(t => !(t.Done===true||t.Done==='true'));
+    if (open && $('nextAction').textContent.startsWith('Loading')) $('nextAction').textContent = open.Task;
   }
   document.querySelectorAll('form.add').forEach(f => f.addEventListener('submit', async ev => {
     ev.preventDefault();
     const input = f.querySelector('input'), btn = f.querySelector('button');
-    const task = input.value.trim(); if (!task) return;
-    btn.disabled = true;
-    try {
-      await fetch(FORGE, {method:'POST', body: new URLSearchParams({task, who: f.dataset.who})});
-      input.value = '';
-      await loadTasks();
-    } finally { btn.disabled = false; }
+    const task = input.value.trim(); if (!task) return; btn.disabled = true;
+    try { await fetch(FORGE,{method:'POST',body:new URLSearchParams({task,who:f.dataset.who})}); input.value=''; await loadTasks(); }
+    finally { btn.disabled = false; }
   }));
 
-  loadData();
-  loadTasks();
+  loadData(); loadTasks();
 })();
 </script>
 </body>
